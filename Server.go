@@ -1,6 +1,8 @@
 package goavahi
 
 import (
+	"fmt"
+
 	"github.com/guelfey/go.dbus"
 )
 
@@ -9,32 +11,54 @@ type AvahiServer struct {
 	obj  *dbus.Object
 }
 
-func (as *AvahiServer) GetVersionString() {
+func (as *AvahiServer) invoke(method string, args ...interface{}) *dbus.Call {
+	method = "org.freedesktop.Avahi.Server." + method
+	if args == nil {
+		return as.obj.Call(method, 0)
+	}
+	return as.obj.Call(method, 0, args)
 
 }
 
-func (as *AvahiServer) GetAPIVersion() {
-
+func (as *AvahiServer) GetVersionString() (string, error) {
+	var vs string
+	err := as.invoke("GetVersionString").Store(&vs)
+	return vs, err
 }
 
-func (as *AvahiServer) GetHostName() {
-
+func (as *AvahiServer) GetAPIVersion() (uint32, error) {
+	var v uint32
+	err := as.invoke("GetAPIVersion").Store(&v)
+	return v, err
 }
 
-func (as *AvahiServer) SetHostName() {
-
+func (as *AvahiServer) GetHostName() (string, error) {
+	var hostname string
+	err := as.invoke("GetHostName").Store(&hostname)
+	return hostname, err
 }
 
-func (as *AvahiServer) GetHostNameFqdn() {
-
+func (as *AvahiServer) SetHostName(hostname string) error {
+	return as.invoke("SetHostName", hostname).Err
 }
 
-func (as *AvahiServer) GetDomainName() {
-
+func (as *AvahiServer) GetHostNameFqdn() (string, error) {
+	var fqdn string
+	err := as.invoke("GetHostNameFqdn").Store(&fqdn)
+	return fqdn, err
 }
 
-func (as *AvahiServer) IsNSSSupportAvailable() {
+func (as *AvahiServer) GetDomainName() (string, error) {
+	var domain string
+	err := as.invoke("GetDomainName").Store(&domain)
+	return domain, err
+}
 
+func (as *AvahiServer) IsNSSSupportAvailable() (bool, error) {
+	var b bool
+	err := as.invoke("IsNSSSupportAvailable").Store(&b)
+	fmt.Println(b)
+	return b, err
 }
 
 func (as *AvahiServer) GetState() {
@@ -74,7 +98,6 @@ func (as *AvahiServer) ResolveService() {
 }
 
 func (as *AvahiServer) EntryGroupNew() (*EntryGroup, error) {
-
 	var path dbus.ObjectPath
 	err := as.obj.Call("org.freedesktop.Avahi.Server.EntryGroupNew", 0).Store(&path)
 	if err != nil {

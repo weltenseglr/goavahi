@@ -19,6 +19,40 @@ func NewSimple() (*Simple, error) {
 	return &Simple{as, nil, nil}, nil
 }
 
+func (s *Simple) GetVersionString() (string, error) {
+	return s.as.GetVersionString()
+}
+
+func (s *Simple) GetAPIVersion() (uint32, error) {
+	return s.as.GetAPIVersion()
+}
+
+func (s *Simple) GetHostName() (string, error) {
+	return s.as.GetHostName()
+}
+
+func (s *Simple) SetHostName(name string) error {
+	return s.as.SetHostName(name)
+}
+
+func (s *Simple) GetHostNameFqdn() (string, error) {
+	return s.as.GetHostNameFqdn()
+}
+
+func (s *Simple) GetDomainName() (string, error) {
+	return s.as.GetDomainName()
+}
+
+func (s *Simple) IsNSSSupportAvailable() (bool, error) {
+	return s.as.IsNSSSupportAvailable()
+}
+
+func (s *Simple) GetState() (uint32, error) {
+	return s.as.GetState()
+}
+
+// #todo implement listener for signal StateChanged
+
 /***************************************
 			EntryGroup Wrappers
  ***************************************/
