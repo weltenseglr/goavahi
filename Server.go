@@ -61,40 +61,62 @@ func (as *AvahiServer) IsNSSSupportAvailable() (bool, error) {
 	return b, err
 }
 
-func (as *AvahiServer) GetState() {
-
+func (as *AvahiServer) GetState() (int32, error) {
+	var i int32
+	err := as.invoke("GetState").Store(&i)
+	return i, err
 }
 
-func (as *AvahiServer) GetLocalServiceCookie() {
-
+func (as *AvahiServer) GetLocalServiceCookie() (uint32, error) {
+	var c uint32
+	err := as.invoke("GetLocalServiceCookie").Store(&c)
+	return c, err
 }
 
-func (as *AvahiServer) GetAlternativeHostName() {
-
+func (as *AvahiServer) GetAlternativeHostName(name string) (string, error) {
+	var aname string
+	err := as.invoke("GetAlternativeHostName", name).Store(&aname)
+	return aname, err
 }
 
-func (as *AvahiServer) GetAlternativeServiceName() {
-
+func (as *AvahiServer) GetAlternativeServiceName(name string) (string, error) {
+	var aname string
+	err := as.invoke("GetAlternativeServiceName", name).Store(&aname)
+	return aname, err
 }
 
-func (as *AvahiServer) GetNetworkInterfaceNameByIndex() {
-
+func (as *AvahiServer) GetNetworkInterfaceNameByIndex(i int) (string, error) {
+	var name string
+	err := as.invoke("GetNetworkInterfaceNameByIndex", i).Store(&name)
+	return name, err
 }
 
-func (as *AvahiServer) GetNetworkInterfaceIndexByName() {
-
+func (as *AvahiServer) GetNetworkInterfaceIndexByName(name string) (int, error) {
+	var i int
+	err := as.invoke("GetNetworkInterfaceIndexByName", name).Store(&i)
+	return i, err
 }
 
-func (as *AvahiServer) ResolveHostName() {
-
+func (as *AvahiServer) ResolveHostName(_interface, protocol int32, name string, aprotocol int32, flags uint32) (error, int32, int32, string, int32, string, uint32) {
+	var _if, proto, aproto int32
+	var addr string
+	err := as.invoke("ResolveHostNameResolveHostName", _interface, protocol, name, aprotocol, flags).Store(&_if, &proto, &name, &aproto, &addr, &flags)
+	return err, _if, proto, name, proto, addr, flags
 }
 
-func (as *AvahiServer) ResolveAddress() {
-
+func (as *AvahiServer) ResolveAddress(_interface, protocol int32, address string, flags uint32) (error, int32, int32, int32, string, string, uint32) {
+	var aproto int32
+	var name string
+	err := as.invoke("ResolveAddress", _interface, protocol, address, flags).Store(&_interface, &protocol, &aproto, &address, &name, &flags)
+	return err, _interface, protocol, aproto, address, name, flags
 }
 
-func (as *AvahiServer) ResolveService() {
-
+func (as *AvahiServer) ResolveService(_interface, protocol int32, name, stype, domain string, aprotocol int32, flags uint32) (error, int32, int32, string, string, string, string, int32, string, uint16, [][]byte, uint32) {
+	var host, address string
+	var port uint16
+	var txt [][]byte
+	err := as.invoke("ResolveService", _interface, protocol, name, stype, domain, aprotocol, flags).Store(&_interface, &protocol, &name, &stype, &domain, &host, &aprotocol, &address, &port, &txt, &flags)
+	return err, _interface, protocol, name, stype, domain, host, aprotocol, address, port, txt, flags
 }
 
 func (as *AvahiServer) EntryGroupNew() (*EntryGroup, error) {
@@ -118,12 +140,7 @@ func (as *AvahiServer) ServiceTypeBrowserNew() {
 func (as *AvahiServer) ServiceBrowserNew(_if int32, proto int32, stype string, sdomain string, flags uint32) (*ServiceBrowser, error) {
 	var path dbus.ObjectPath
 	obj := as.conn.Object("org.freedesktop.Avahi", "/")
-	err := obj.Call("org.freedesktop.Avahi.Server.ServiceBrowserNew", 0,
-		_if,
-		proto,
-		stype,
-		sdomain,
-		flags).Store(&path)
+	err := obj.Call("org.freedesktop.Avahi.Server.ServiceBrowserNew", 0, _if, proto, stype, sdomain, flags).Store(&path)
 	if err != nil {
 		return nil, err
 	}

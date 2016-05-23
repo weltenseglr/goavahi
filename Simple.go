@@ -47,8 +47,36 @@ func (s *Simple) IsNSSSupportAvailable() (bool, error) {
 	return s.as.IsNSSSupportAvailable()
 }
 
-func (s *Simple) GetState() (uint32, error) {
+func (s *Simple) GetState() (int32, error) {
 	return s.as.GetState()
+}
+
+func (s *Simple) GetLocalServiceCookie() (uint32, error) {
+	return s.as.GetLocalServiceCookie()
+}
+
+func (s *Simple) GetAlternativeHostName(name string) (string, error) {
+	return s.as.GetAlternativeHostName(name)
+}
+
+func (s *Simple) GetAlternativeServiceName(name string) (string, error) {
+	return s.as.GetAlternativeServiceName(name)
+}
+
+func (s *Simple) GetNetworkInterfaceNameByIndex(i int) (string, error) {
+	return s.as.GetNetworkInterfaceNameByIndex(i)
+}
+
+func (s *Simple) GetNetworkInterfaceIndexByName(name string) (int, error) {
+	return s.as.GetNetworkInterfaceIndexByName(name)
+}
+
+func (s *Simple) ResolveHostName(_interface, protocol int32, name string, aprotocol int32, flags uint32) (error, int32, int32, string, int32, string, uint32) {
+	return s.as.ResolveHostName(_interface, protocol, name, aprotocol, flags)
+}
+
+func (s *Simple) ResolveAddress(_interface, protocol int32, address string, flags uint32) (error, int32, int32, int32, string, string, uint32) {
+	return s.as.ResolveAddress(_interface, protocol, address, flags)
 }
 
 // #todo implement listener for signal StateChanged
