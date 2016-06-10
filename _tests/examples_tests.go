@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/weltenseglr/goavahi"
@@ -59,7 +60,7 @@ func main() {
 
 	b, err := s.IsNSSSupportAvailable()
 	if err == nil {
-		fmt.Println("IsNSSSupportAvailable " + b)
+		fmt.Println("IsNSSSupportAvailable " + strconv.FormatBool(b))
 	} else {
 		fmt.Println(err.Error())
 	}
