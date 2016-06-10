@@ -21,8 +21,8 @@ type ServiceBrowser struct {
 }
 
 func (sb *ServiceBrowser) Start() {
-	sb.obj.Call("org.freedesktop.Avahi.ServiceBrowser", 0)
 	c := make(chan *dbus.Signal, 10)
+	sb.obj.Call("org.freedesktop.Avahi.ServiceBrowser", 0)
 	sb.conn.Signal(c)
 	for v := range c {
 		switch v.Name {
