@@ -22,8 +22,8 @@ type ServiceBrowser struct {
 
 func (sb *ServiceBrowser) Start() {
 	c := make(chan *dbus.Signal, 10)
-	sb.obj.Call("org.freedesktop.Avahi.ServiceBrowser", 0)
 	sb.conn.Signal(c)
+	sb.obj.Call("org.freedesktop.Avahi.ServiceBrowser", 0)
 	for v := range c {
 		switch v.Name {
 		case "org.freedesktop.Avahi.ServiceBrowser.ItemNew":
@@ -50,7 +50,6 @@ func (sb *ServiceBrowser) Start() {
 			break
 		}
 	}
-	//"type='signal'"
 }
 
 func (sb *ServiceBrowser) SetAddItemCallback(fn func(*ServiceBrowserItem)) {

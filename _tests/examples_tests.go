@@ -8,12 +8,26 @@ import (
 	"github.com/weltenseglr/goavahi"
 )
 
+var s *goavahi.Simple
+
 func onServiceAdd(i *goavahi.ServiceBrowserItem) {
-	fmt.Printf("Found service %s\n", i)
+	fmt.Printf("Found service %s (%s)\n", i.Name, i.Type)
 }
 
 func onServiceRem(i *goavahi.ServiceBrowserItem) {
 	fmt.Printf("service disconnected %s\n", i)
+}
+
+func onServiceTypeAdd(i *goavahi.ServiceTypeBrowserItem) {
+	fmt.Printf("Service Type discovered %s. Looking for Services...\n", i)
+	err := s.BrowseServices(i.Stype, onServiceAdd, onServiceRem)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func onServiceTypeRem(i *goavahi.ServiceTypeBrowserItem) {
+	fmt.Printf("Service Type disconnected %s\n", i)
 }
 
 func check(msg string, i interface{}, r error) {
@@ -21,7 +35,8 @@ func check(msg string, i interface{}, r error) {
 }
 
 func main() {
-	s, err := goavahi.NewSimple()
+	var err error
+	s, err = goavahi.NewSimple()
 
 	vs, err := s.GetVersionString()
 	if err == nil {
@@ -65,13 +80,13 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	fmt.Println("create service browser")
-	err = s.BrowseServices("_foo._tcp", onServiceAdd, onServiceRem)
-
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
+
+	s.BrowseServiceTypes(onServiceTypeAdd, onServiceTypeRem)
+
 	txt := make(map[string]string, 2)
 	txt["FOO"] = "BAR"
 	txt["USR"] = "weltenseglr"
@@ -81,11 +96,12 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	err = s.AddServiceSubtype("subtest", "_foo._tcp", "_bar._sub._foo._tcp", 9999, txt)
+	//err = s.AddServiceSubtype("subtest", "_foo._tcp", "_bar._sub._foo._tcp", 9999, txt)
+
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	s.EntryGroupCommit()
+	//s.EntryGroupCommit()
 
 	// wait a little
 	time.Sleep(time.Second * 10)

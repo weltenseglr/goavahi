@@ -133,8 +133,15 @@ func (as *AvahiServer) DomainBrowserNew() {
 
 }
 
-func (as *AvahiServer) ServiceTypeBrowserNew() {
-
+func (as *AvahiServer) ServiceTypeBrowserNew(_if int32, proto int32, sdomain string, flags uint32) (*ServiceTypeBrowser, error) {
+	var path dbus.ObjectPath
+	obj := as.conn.Object("org.freedesktop.Avahi", "/")
+	err := obj.Call("org.freedesktop.Avahi.Server.ServiceTypeBrowserNew", 0, _if, proto, sdomain, flags).Store(&path)
+	if err != nil {
+		return nil, err
+	}
+	obj = as.conn.Object("org.freedesktop.Avahi", path)
+	return &ServiceTypeBrowser{as.conn, obj, nil, nil}, nil
 }
 
 func (as *AvahiServer) ServiceBrowserNew(_if int32, proto int32, stype string, sdomain string, flags uint32) (*ServiceBrowser, error) {

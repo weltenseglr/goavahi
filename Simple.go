@@ -6,9 +6,10 @@ import (
 )
 
 type Simple struct {
-	as *AvahiServer
-	eg *EntryGroup
-	sb *ServiceBrowser
+	as  *AvahiServer
+	eg  *EntryGroup
+	sb  *ServiceBrowser
+	stb *ServiceTypeBrowser
 }
 
 func NewSimple() (*Simple, error) {
@@ -16,7 +17,7 @@ func NewSimple() (*Simple, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Simple{as, nil, nil}, nil
+	return &Simple{as, nil, nil, nil}, nil
 }
 
 func (s *Simple) GetVersionString() (string, error) {
@@ -137,25 +138,43 @@ func (s *Simple) EntryGroupCommit() error {
 		ServiceBrowser Wrappers
  ***************************************/
 
-func (s *Simple) getServiceBrowser(stype string) error {
-	var err error
-	if s.sb == nil {
-		s.sb, err = s.as.ServiceBrowserNew(
-			-1, // avahi.IF_UNSPEC
-			-1, // avahi.PROTO_UNSPEC
-			stype,
-			"", // domain: let avahi decide
-			0)  // no flags
-	}
-	return err
+func (s *Simple) getServiceBrowser(stype string, onAdd func(*ServiceBrowserItem), onRemove func(*ServiceBrowserItem)) (*ServiceBrowser, error) {
+	sb, err := s.as.ServiceBrowserNew(
+		-1, // avahi.IF_UNSPEC
+		-1, // avahi.PROTO_UNSPEC
+		stype,
+		"", // domain: let avahi decide
+		0)  // no flags
+	sb.SetAddItemCallback(onAdd)
+	sb.SetRemoveItemCallback(onRemove)
+	return sb, err
+}
+
+func (s *Simple) getServiceTypeBrowser(onAdd func(*ServiceTypeBrowserItem), onRemove func(*ServiceTypeBrowserItem)) (*ServiceTypeBrowser, error) {
+	stb, err := s.as.ServiceTypeBrowserNew(
+		-1, // avahi.IF_UNSPEC
+		-1, // avahi.PROTO_UNSPEC
+		"", // domain: let avahi decide
+		0)  // no flags
+	stb.SetAddItemCallback(onAdd)
+	stb.SetRemoveItemCallback(onRemove)
+	return stb, err
 }
 
 func (s *Simple) BrowseServices(stype string, onAdd func(*ServiceBrowserItem), onRemove func(*ServiceBrowserItem)) error {
-	if err := s.getServiceBrowser(stype); err != nil {
+	sb, err := s.getServiceBrowser(stype, onAdd, onRemove)
+	if err != nil {
 		return err
 	}
-	s.sb.SetAddItemCallback(onAdd)
-	s.sb.SetRemoveItemCallback(onRemove)
-	go s.sb.Start()
+	go sb.Start()
+	return nil
+}
+
+func (s *Simple) BrowseServiceTypes(onAdd func(*ServiceTypeBrowserItem), onRemove func(*ServiceTypeBrowserItem)) error {
+	stb, err := s.getServiceTypeBrowser(onAdd, onRemove)
+	if err != nil {
+		return err
+	}
+	go stb.Start()
 	return nil
 }
