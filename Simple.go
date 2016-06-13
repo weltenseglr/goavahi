@@ -80,6 +80,26 @@ func (s *Simple) ResolveAddress(_interface, protocol int32, address string, flag
 	return s.as.ResolveAddress(_interface, protocol, address, flags)
 }
 
+/*
+in i interface
+in i protocol
+in s name
+in s type
+in s domain
+in i aprotocol
+in u flags
+*/
+func (s *Simple) ResolveService(name, stype string) (error, int32, int32, string, string, string, string, int32, string, uint16, [][]byte, uint32) {
+	return s.as.ResolveService(
+		int32(-1), // avahi.IF_UNSPEC
+		int32(0),  // IPv4
+		name,
+		stype,
+		"",        //Avahi default domain
+		int32(-1), // avahi.PROTO_UNSPEC,
+		uint32(0)) // flags
+}
+
 // #todo implement listener for signal StateChanged
 
 /***************************************

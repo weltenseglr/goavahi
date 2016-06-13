@@ -13,10 +13,7 @@ type AvahiServer struct {
 
 func (as *AvahiServer) invoke(method string, args ...interface{}) *dbus.Call {
 	method = "org.freedesktop.Avahi.Server." + method
-	if args == nil {
-		return as.obj.Call(method, 0)
-	}
-	return as.obj.Call(method, 0, args)
+	return as.obj.Call(method, 0)
 
 }
 
@@ -115,7 +112,8 @@ func (as *AvahiServer) ResolveService(_interface, protocol int32, name, stype, d
 	var host, address string
 	var port uint16
 	var txt [][]byte
-	err := as.invoke("ResolveService", _interface, protocol, name, stype, domain, aprotocol, flags).Store(&_interface, &protocol, &name, &stype, &domain, &host, &aprotocol, &address, &port, &txt, &flags)
+	call := as.obj.Call("org.freedesktop.Avahi.Server.ResolveService", 0, _interface, protocol, name, stype, domain, aprotocol, flags)
+	err := call.Store(&_interface, &protocol, &name, &stype, &domain, &host, &aprotocol, &address, &port, &txt, &flags)
 	return err, _interface, protocol, name, stype, domain, host, aprotocol, address, port, txt, flags
 }
 
