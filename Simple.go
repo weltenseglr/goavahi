@@ -2,6 +2,7 @@ package goavahi
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -120,7 +121,7 @@ func (s *Simple) AddService(sname string, stype string, port uint16, txtRecords 
 	}
 	return s.eg.AddService(
 		int32(-1), // avahi.IF_UNSPEC
-		int32(-1), // avahi.PROTO_UNSPEC
+		int32(0),  // IPv4
 		uint32(0), // flags
 		sname,
 		stype,
@@ -130,7 +131,7 @@ func (s *Simple) AddService(sname string, stype string, port uint16, txtRecords 
 		txtRecords)
 }
 
-func (s *Simple) AddServiceSubtype(sname string, stype string, substype string, port uint16, txtRecords map[string]string) error {
+func (s *Simple) AddServiceSubtype(sname string, substype string, stype string) error {
 	if !strings.HasSuffix(substype, stype) {
 		return errors.New("subtype must contain type! E.g. subtype '_my._sub._http._tcp' and type '_http._tcp'. Was :" + substype + " -- " + stype)
 	}
@@ -139,15 +140,12 @@ func (s *Simple) AddServiceSubtype(sname string, stype string, substype string, 
 	}
 	return s.eg.AddServiceSubtype(
 		int32(-1), // avahi.IF_UNSPEC
-		int32(-1), // avahi.PROTO_UNSPEC
+		int32(0),  // IPv4
 		uint32(0), // flags
 		sname,
 		stype,
 		"", // sdomain let avahi decide
-		substype,
-		"",   // shost: let avahi decide
-		port, // port
-		txtRecords)
+		substype)
 }
 
 func (s *Simple) EntryGroupCommit() error {
@@ -159,9 +157,10 @@ func (s *Simple) EntryGroupCommit() error {
  ***************************************/
 
 func (s *Simple) getServiceBrowser(stype string, onAdd func(*ServiceBrowserItem), onRemove func(*ServiceBrowserItem)) (*ServiceBrowser, error) {
+	fmt.Println("Browsing for ", stype)
 	sb, err := s.as.ServiceBrowserNew(
 		-1, // avahi.IF_UNSPEC
-		-1, // avahi.PROTO_UNSPEC
+		0,  // IPv4
 		stype,
 		"", // domain: let avahi decide
 		0)  // no flags
@@ -173,7 +172,7 @@ func (s *Simple) getServiceBrowser(stype string, onAdd func(*ServiceBrowserItem)
 func (s *Simple) getServiceTypeBrowser(onAdd func(*ServiceTypeBrowserItem), onRemove func(*ServiceTypeBrowserItem)) (*ServiceTypeBrowser, error) {
 	stb, err := s.as.ServiceTypeBrowserNew(
 		-1, // avahi.IF_UNSPEC
-		-1, // avahi.PROTO_UNSPEC
+		0,  // avahi.PROTO_UNSPEC
 		"", // domain: let avahi decide
 		0)  // no flags
 	stb.SetAddItemCallback(onAdd)
