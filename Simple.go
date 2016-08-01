@@ -156,8 +156,9 @@ func (s *Simple) EntryGroupCommit() error {
 		ServiceBrowser Wrappers
  ***************************************/
 
-func (s *Simple) getServiceBrowser(stype string, onAdd func(*ServiceBrowserItem), onRemove func(*ServiceBrowserItem)) (*ServiceBrowser, error) {
+func (s *Simple) getServiceBrowser(stype string, onAdd func(ServiceBrowserItem), onRemove func(ServiceBrowserItem)) (*ServiceBrowser, error) {
 	fmt.Println("Browsing for ", stype)
+	Server.LockSignalHandler()
 	sb, err := s.as.ServiceBrowserNew(
 		-1, // avahi.IF_UNSPEC
 		0,  // IPv4
@@ -166,10 +167,11 @@ func (s *Simple) getServiceBrowser(stype string, onAdd func(*ServiceBrowserItem)
 		0)  // no flags
 	sb.SetAddItemCallback(onAdd)
 	sb.SetRemoveItemCallback(onRemove)
+	Server.UnlockSignalHandler()
 	return sb, err
 }
 
-func (s *Simple) getServiceTypeBrowser(onAdd func(*ServiceTypeBrowserItem), onRemove func(*ServiceTypeBrowserItem)) (*ServiceTypeBrowser, error) {
+func (s *Simple) getServiceTypeBrowser(onAdd func(ServiceTypeBrowserItem), onRemove func(ServiceTypeBrowserItem)) (*ServiceTypeBrowser, error) {
 	stb, err := s.as.ServiceTypeBrowserNew(
 		-1, // avahi.IF_UNSPEC
 		0,  // avahi.PROTO_UNSPEC
@@ -180,16 +182,15 @@ func (s *Simple) getServiceTypeBrowser(onAdd func(*ServiceTypeBrowserItem), onRe
 	return stb, err
 }
 
-func (s *Simple) BrowseServices(stype string, onAdd func(*ServiceBrowserItem), onRemove func(*ServiceBrowserItem)) error {
-	sb, err := s.getServiceBrowser(stype, onAdd, onRemove)
+func (s *Simple) BrowseServices(stype string, onAdd func(ServiceBrowserItem), onRemove func(ServiceBrowserItem)) error {
+	_, err := s.getServiceBrowser(stype, onAdd, onRemove)
 	if err != nil {
 		return err
 	}
-	go sb.Start()
 	return nil
 }
 
-func (s *Simple) BrowseServiceTypes(onAdd func(*ServiceTypeBrowserItem), onRemove func(*ServiceTypeBrowserItem)) error {
+func (s *Simple) BrowseServiceTypes(onAdd func(ServiceTypeBrowserItem), onRemove func(ServiceTypeBrowserItem)) error {
 	stb, err := s.getServiceTypeBrowser(onAdd, onRemove)
 	if err != nil {
 		return err

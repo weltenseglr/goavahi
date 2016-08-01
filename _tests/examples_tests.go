@@ -10,15 +10,15 @@ import (
 
 var s *goavahi.Simple
 
-func onServiceAdd(i *goavahi.ServiceBrowserItem) {
+func onServiceAdd(i goavahi.ServiceBrowserItem) {
 	fmt.Printf("Found service %s (%s)\n", i.Name, i.Type)
 }
 
-func onServiceRem(i *goavahi.ServiceBrowserItem) {
+func onServiceRem(i goavahi.ServiceBrowserItem) {
 	fmt.Printf("service disconnected %s\n", i)
 }
 
-func onServiceTypeAdd(i *goavahi.ServiceTypeBrowserItem) {
+func onServiceTypeAdd(i goavahi.ServiceTypeBrowserItem) {
 	fmt.Printf("Service Type discovered %s. Looking for Services...\n", i)
 	err := s.BrowseServices(i.Stype, onServiceAdd, onServiceRem)
 	if err != nil {
@@ -26,7 +26,7 @@ func onServiceTypeAdd(i *goavahi.ServiceTypeBrowserItem) {
 	}
 }
 
-func onServiceTypeRem(i *goavahi.ServiceTypeBrowserItem) {
+func onServiceTypeRem(i goavahi.ServiceTypeBrowserItem) {
 	fmt.Printf("Service Type disconnected %s\n", i)
 }
 
@@ -48,6 +48,13 @@ func main() {
 	v, err := s.GetAPIVersion()
 	if err == nil {
 		fmt.Printf("API version: %d\n", v)
+	} else {
+		fmt.Println(err.Error())
+	}
+
+	state, err := s.GetState()
+	if err == nil {
+		fmt.Printf("Server state: %d\n", state)
 	} else {
 		fmt.Println(err.Error())
 	}
@@ -104,5 +111,5 @@ func main() {
 	//s.EntryGroupCommit()
 
 	// wait a little
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 1000)
 }

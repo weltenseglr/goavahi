@@ -14,48 +14,43 @@ type ServiceBrowserItem struct {
 }
 
 type ServiceBrowser struct {
-	conn    *dbus.Conn
-	obj     *dbus.Object
+	path    dbus.ObjectPath
 	addItem func(*ServiceBrowserItem)
 	remItem func(*ServiceBrowserItem)
 }
 
-func (sb *ServiceBrowser) Start() {
-	c := make(chan *dbus.Signal, 10)
-	sb.conn.Signal(c)
-	sb.obj.Call("org.freedesktop.Avahi.ServiceBrowser", 0)
-	for v := range c {
-		switch v.Name {
-		case "org.freedesktop.Avahi.ServiceBrowser.ItemNew":
-			if sb.addItem != nil {
-				sb.addItem(&ServiceBrowserItem{
-					v.Body[0].(int32),
-					v.Body[1].(int32),
-					v.Body[2].(string),
-					v.Body[3].(string),
-					v.Body[4].(string),
-					v.Body[5].(uint32)})
-			}
-			break
-		case "org.freedesktop.Avahi.ServiceBrowser.ItemRemove":
-			if sb.remItem != nil {
-				sb.remItem(&ServiceBrowserItem{
-					v.Body[0].(int32),
-					v.Body[1].(int32),
-					v.Body[2].(string),
-					v.Body[3].(string),
-					v.Body[4].(string),
-					v.Body[5].(uint32)})
-			}
-			break
-		}
+func (as *AvahiServer) ServiceBrowserNew(_if int32, proto int32, stype string, sdomain string, flags uint32) (*ServiceBrowser, error) {
+	var path dbus.ObjectPath
+	obj := as.conn.Object("org.freedesktop.Avahi", "/")
+	err := obj.Call("org.freedesktop.Avahi.Server.ServiceBrowserNew", 0, _if, proto, stype, sdomain, flags).Store(&path)
+	if err != nil {
+		return nil, err
 	}
+	obj = as.conn.Object("org.freedesktop.Avahi", path)
+	sb := ServiceBrowser{path, nil, nil}
+	return &sb, nil
 }
 
-func (sb *ServiceBrowser) SetAddItemCallback(fn func(*ServiceBrowserItem)) {
-	sb.addItem = fn
+func (sb *ServiceBrowser) SetAddItemCallback(fn func(ServiceBrowserItem)) {
+	Server.AddHandler(sb.path, "org.freedesktop.Avahi.ServiceBrowser.ItemNew", func(v *dbus.Signal) {
+		fn(ServiceBrowserItem{
+			v.Body[0].(int32),
+			v.Body[1].(int32),
+			v.Body[2].(string),
+			v.Body[3].(string),
+			v.Body[4].(string),
+			v.Body[5].(uint32)})
+	})
 }
 
-func (sb *ServiceBrowser) SetRemoveItemCallback(fn func(*ServiceBrowserItem)) {
-	sb.remItem = fn
+func (sb *ServiceBrowser) SetRemoveItemCallback(fn func(ServiceBrowserItem)) {
+	Server.AddHandler(sb.path, "org.freedesktop.Avahi.ServiceBrowser.ItemRemove", func(v *dbus.Signal) {
+		fn(ServiceBrowserItem{
+			v.Body[0].(int32),
+			v.Body[1].(int32),
+			v.Body[2].(string),
+			v.Body[3].(string),
+			v.Body[4].(string),
+			v.Body[5].(uint32)})
+	})
 }

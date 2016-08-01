@@ -2,13 +2,71 @@ package goavahi
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/guelfey/go.dbus"
 )
 
+type SignalHandlerId struct {
+	Path       dbus.ObjectPath
+	SignalName string
+}
+
 type AvahiServer struct {
-	conn *dbus.Conn
-	obj  *dbus.Object
+	conn        *dbus.Conn
+	obj         *dbus.Object
+	handlers    map[SignalHandlerId]func(*dbus.Signal)
+	handlerLock sync.Mutex
+}
+
+var Server *AvahiServer
+
+func (as *AvahiServer) Connect(conn *dbus.Conn, obj *dbus.Object) {
+	if Server != nil {
+		panic("Instance already initialized.")
+	}
+	as.conn = conn
+	as.obj = obj
+	as.handlers = make(map[SignalHandlerId]func(*dbus.Signal), 0)
+	Server = as
+	go as.startSignalHandler()
+}
+
+func (as *AvahiServer) LockSignalHandler() {
+	as.handlerLock.Lock()
+}
+
+func (as *AvahiServer) UnlockSignalHandler() {
+	as.handlerLock.Unlock()
+}
+
+func (as *AvahiServer) startSignalHandler() {
+	c := make(chan *dbus.Signal, 1000)
+	as.conn.Signal(c)
+	for v := range c {
+		as.handlerLock.Lock()
+		h := as.handlers[SignalHandlerId{v.Path, v.Name}]
+		if h != nil {
+			h(v)
+		}
+		as.handlerLock.Unlock()
+	}
+}
+
+func (as *AvahiServer) AddHandler(sender dbus.ObjectPath, signal string, callback func(*dbus.Signal)) *SignalHandlerId {
+	h := SignalHandlerId{sender, signal}
+	as.handlers[h] = callback
+	return &h
+}
+
+func (as *AvahiServer) RemoveHandler(h *SignalHandlerId) bool {
+	as.handlerLock.Lock()
+	defer as.handlerLock.Unlock()
+	if as.handlers[*h] == nil {
+		return false
+	}
+	delete(as.handlers, *h)
+	return true
 }
 
 func (as *AvahiServer) invoke(method string, args ...interface{}) *dbus.Call {
@@ -140,17 +198,6 @@ func (as *AvahiServer) ServiceTypeBrowserNew(_if int32, proto int32, sdomain str
 	}
 	obj = as.conn.Object("org.freedesktop.Avahi", path)
 	return &ServiceTypeBrowser{as.conn, obj, nil, nil}, nil
-}
-
-func (as *AvahiServer) ServiceBrowserNew(_if int32, proto int32, stype string, sdomain string, flags uint32) (*ServiceBrowser, error) {
-	var path dbus.ObjectPath
-	obj := as.conn.Object("org.freedesktop.Avahi", "/")
-	err := obj.Call("org.freedesktop.Avahi.Server.ServiceBrowserNew", 0, _if, proto, stype, sdomain, flags).Store(&path)
-	if err != nil {
-		return nil, err
-	}
-	obj = as.conn.Object("org.freedesktop.Avahi", path)
-	return &ServiceBrowser{as.conn, obj, nil, nil}, nil
 }
 
 func (as *AvahiServer) ServiceResolverNew() {

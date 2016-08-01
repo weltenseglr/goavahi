@@ -6,13 +6,10 @@ import (
 	"github.com/guelfey/go.dbus"
 )
 
-type Avahi_dbus struct {
-	connection *dbus.Conn
-	obj        *dbus.Object
-}
-
 func GetServer(conn *dbus.Conn) (*AvahiServer, error) {
-	r := AvahiServer{conn, conn.Object("org.freedesktop.Avahi", "/")}
+	obj := conn.Object("org.freedesktop.Avahi", "/")
+	r := AvahiServer{}
+	r.Connect(conn, obj)
 	return &r, nil
 }
 

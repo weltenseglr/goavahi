@@ -14,8 +14,8 @@ type ServiceTypeBrowserItem struct {
 type ServiceTypeBrowser struct {
 	conn    *dbus.Conn
 	obj     *dbus.Object
-	addItem func(*ServiceTypeBrowserItem)
-	remItem func(*ServiceTypeBrowserItem)
+	addItem func(ServiceTypeBrowserItem)
+	remItem func(ServiceTypeBrowserItem)
 }
 
 func (stb *ServiceTypeBrowser) Start() {
@@ -26,7 +26,7 @@ func (stb *ServiceTypeBrowser) Start() {
 		switch v.Name {
 		case "org.freedesktop.Avahi.ServiceTypeBrowser.ItemNew":
 			if stb.addItem != nil {
-				stb.addItem(&ServiceTypeBrowserItem{
+				stb.addItem(ServiceTypeBrowserItem{
 					v.Body[0].(int32),
 					v.Body[1].(int32),
 					v.Body[2].(string),
@@ -36,7 +36,7 @@ func (stb *ServiceTypeBrowser) Start() {
 			break
 		case "org.freedesktop.Avahi.ServiceTypeBrowser.ItemRemove":
 			if stb.remItem != nil {
-				stb.remItem(&ServiceTypeBrowserItem{
+				stb.remItem(ServiceTypeBrowserItem{
 					v.Body[0].(int32),
 					v.Body[1].(int32),
 					v.Body[2].(string),
@@ -48,10 +48,10 @@ func (stb *ServiceTypeBrowser) Start() {
 	}
 }
 
-func (stb *ServiceTypeBrowser) SetAddItemCallback(fn func(*ServiceTypeBrowserItem)) {
+func (stb *ServiceTypeBrowser) SetAddItemCallback(fn func(ServiceTypeBrowserItem)) {
 	stb.addItem = fn
 }
 
-func (stb *ServiceTypeBrowser) SetRemoveItemCallback(fn func(*ServiceTypeBrowserItem)) {
+func (stb *ServiceTypeBrowser) SetRemoveItemCallback(fn func(ServiceTypeBrowserItem)) {
 	stb.remItem = fn
 }
