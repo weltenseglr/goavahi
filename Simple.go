@@ -115,6 +115,10 @@ func (s *Simple) getEntryGroup() error {
 	return err
 }
 
+func (s *Simple) EntryGroupNew() (*EntryGroup, error) {
+	return s.as.EntryGroupNew()
+}
+
 func (s *Simple) AddService(sname string, stype string, port uint16, txtRecords map[string]string) error {
 	if err := s.getEntryGroup(); err != nil {
 		return err

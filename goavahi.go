@@ -6,6 +6,10 @@ import (
 	"github.com/guelfey/go.dbus"
 )
 
+const IFUNSPEC int32 = -1
+const IPv4 int32 = 0
+const NOFLAGS uint32 = 0
+
 func GetServer(conn *dbus.Conn) (*AvahiServer, error) {
 	obj := conn.Object("org.freedesktop.Avahi", "/")
 	r := AvahiServer{}
